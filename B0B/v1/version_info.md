@@ -1,0 +1,1 @@
+Future versions will have a better testing script that isn't just a copy paste with training deleted and epsilon set to 0.
