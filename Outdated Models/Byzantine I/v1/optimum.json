@@ -1,0 +1,7 @@
+{
+    "{'alpha': 1, 'epsilon_init': 0.5, 'epsilon_decay': 0.99, 'epsilon_min': 0.1, 'gamma': 0.995, 'layer1_size': 1024, 'layer2_size': 512, 'layer3_size': 256, 'layer4_size': 128, 'batch_size': 32, 'learning_rate': 0.0001, 'dropout1': 0.3, 'dropout2': 0.2, 'dropout3': 0.3, 'reg1': 0.1, 'reg2': 0.01, 'reg3': 0.01, 'memory': 10000, 'input_shape': (1, 23), 'actions': 4, 'sample_size_for_TDERR': 200, 'time_step_threshold': 100}": [
+        -3,
+        0.0,
+        0
+    ]
+}
