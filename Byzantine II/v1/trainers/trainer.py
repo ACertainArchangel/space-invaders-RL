@@ -38,12 +38,14 @@ class trainer:
         def train(self):
             self.agent.replay()
 
-    def train(self, steps):
+    def train(self, steps, print_every=1000):
         def run_session(session, steps):
             for i in range(steps):
                 session.step()
+                if i % print_every == 0:
+                    print(f"Session {session.params} step {i}/{steps} - Total reward: {session.env.total_reward}")
         
-        print(f"Starting a parallel training process for {steps} models. This will take a while.")
+        print(f"Starting a parallel training process for {len(self.sessions)} models with {steps} training steps each. This will take a while.")
         Parallel(n_jobs=-1)(delayed(run_session)(session, steps) for session in self.sessions)
             
 
