@@ -63,6 +63,9 @@ class relu3_Qagent_linearOut_dOut_l2():
 
         self.model.save_weights(path)
 
+    def epsilon_save(self):
+        return self.epsilon
+
     def remember(self,   state, action, reward, nextstate,   done=False):
         self.memory.append((state, action, reward, nextstate, done))
 

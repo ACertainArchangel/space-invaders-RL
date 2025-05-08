@@ -73,7 +73,6 @@ class tuner_for_bob(trainer):
             report[str(session.params)]=[]
 
         for killer in range(killers):
-            steps=0
 
             self.train(int(action_steps/killers))
 
@@ -88,8 +87,8 @@ class tuner_for_bob(trainer):
         
             
     def prune(self, killer_ratio, steps):#e0 pruning
-        old_number = len(self.models)
-        print(f"Pruning {old_number} models to {int(old_number/killer_ratio)}-ish (parallel running)")
+        old_number = len(self.sessions)
+        print(f"Pruning {old_number} models to {int(old_number*killer_ratio)}-ish (parallel running)")
 
         def reset_job(session):
             session.env.reset()
