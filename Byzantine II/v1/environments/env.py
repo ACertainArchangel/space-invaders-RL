@@ -13,7 +13,6 @@ sys.stdout=NullWriter()
 import pygame
 import random as rand
 import numpy as np
-from joblib import Parallel, delayed
 
 sys.stdout = original
 
@@ -65,6 +64,8 @@ class environment():
     def __init__(self, ammo_inc, Player_Speed, Enemy_Speed, starting_ammo, num_enem, ammo_penalty,
     hit_reward, death_penalty, closeness_penalty, closeness_threshold, SCREEN_HEIGHT=800, SCREEN_WIDTH=850):
         
+        print("If this is printed more than two times than you have a serious problem!!!")
+        
         self.rendering = False
         
         self.ammo_inc = ammo_inc
@@ -85,7 +86,10 @@ class environment():
 
         self.reset()
 
+        self.total_reward = 0
+
     def reset(self):
+        """Resets the environment to it's initial state but does not reset total reward."""
         self.game_over = False
         self.playerX = 400
         self.playerY = 730
@@ -112,9 +116,8 @@ class environment():
 
         self.reward = 0
 
-        self.total_reward = 0
-
     class enemy():
+        """An enemy object that moves in a random direction and can be hit by the bullet."""
         def __init__(self, parent):
             self.enemyX = rand.randint(0,750)
             self.enemyY=rand.randint(50, 150)
@@ -192,7 +195,7 @@ class environment():
         """Takes an action and returns (reward, state, newstate, done)"""
 
         if self.game_over:
-            self.reset() #NO!!! BAD!!! FIX THIS!!!
+            self.reset()
 
         state = self.state()
 
