@@ -100,8 +100,6 @@ class environment():
 
         self.reward = 0
 
-        self.total_reward = 0
-
     class enemy():
         def __init__(self, parent):
             self.enemyX = rand.randint(0,750)
@@ -262,6 +260,8 @@ class environment():
         self._initialize_pygame()
 
         self.reset()
+
+        self.total_reward = 0
 
 class relu3_Qagent_linearOut_dOut_l2():
 

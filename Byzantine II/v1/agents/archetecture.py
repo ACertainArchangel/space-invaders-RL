@@ -15,6 +15,7 @@ sys.stdout = original
 #there are hard coded shapes in here! Get rid of them!!!
 
 class relu3_Qagent_linearOut_dOut_l2():
+    """An agent that uses a 4 layer neural network with ReLU activations, dropout, and L2 regularization."""
 
     class_hyperparameter_strings = '''alpha, epsilon_init, epsilon_decay, epsilon_min, gamma, layer1_size, 
                  layer2_size, layer3_size, layer4_size, batch_size, learning_rate,
@@ -55,27 +56,32 @@ class relu3_Qagent_linearOut_dOut_l2():
         return model
 
     def load(self, path):
+        """Given a file loads weights into the model."""
         self.model.load_weights(path)
 
     def save(self, path):
+        """Saves the model weights to a file."""
         if not path.endswith(".weights.h5"):
             path+=".weights.h5"
 
         self.model.save_weights(path)
 
     def epsilon_save(self):
+        """Returns the current epsilon value."""
         return self.epsilon
 
     def remember(self,   state, action, reward, nextstate,   done=False):
         self.memory.append((state, action, reward, nextstate, done))
 
     def act(self, state):
+        """Returns the action to take given a state using epsilon-greedy policy."""
         if np.random.rand() < self.epsilon:
             return np.random.randint(self.model.output_shape[-1])  # Random action
         else:
             return np.argmax(self.model.predict(state, verbose=0)[0])
     
     def replay(self): #Adding beta to adjust for bias (self.model.optimiser.learning_rate = something with beta or whatever) might be a good idea
+        """Uses memories to train the model, prioratising based on temporal diference error."""
         if len(self.memory)>=self.sample_size_for_TDERR:
             TDERRSAMPLE = int(self.sample_size_for_TDERR)
         elif self.batch_size<=len(self.memory)<self.sample_size_for_TDERR:
@@ -170,9 +176,9 @@ class relu3_Qagent_linearOut_dOut_l2():
 
 
 if __name__=="__main__":
-    from tuners.tuner import tuner_for_bob
+    from tuners.tuner import tuner
 
-    tuner = tuner_for_bob(maximum_capacity=1)#oops this will not leave space for data. Fix that!!!
+    tuner = tuner(maximum_capacity=1)#oops this will not leave space for data. Fix that!!!
 
     tuner.fill_up(gigabytes_reserved=0.5)#Add better verbosity mode!!!
 

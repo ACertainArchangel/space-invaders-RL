@@ -15,12 +15,12 @@ from joblib import Parallel, delayed
 sys.stdout = original
 
 def get_remaining_ram_in_gb():
-    # Get the available memory in bytes
+    """Get the available memory in gigabytes"""
     available_memory = psutil.virtual_memory().available
-    # Convert bytes to GB
     return available_memory / (1024 ** 3)
 
-class tuner_for_bob(trainer):
+class tuner(trainer):
+    """A tuner for the agent. It is used to tune the hyperparameters of the agent using a parallel training process."""
     def __init__(self, maximum_capacity):
         super().__init__(maximum_capacity)
 
@@ -50,6 +50,7 @@ class tuner_for_bob(trainer):
     }
 
     def fill_up(self, gigabytes_reserved):
+        """Fills the trainer with sessions until the maximum capacity is reached or the available RAM is less than the reserved amount."""
         created_instances = 0
         while get_remaining_ram_in_gb()>gigabytes_reserved and len(self.sessions)<self.maximum_capacity:
             self.add(**self.get_random_hyperparameters())
@@ -57,6 +58,7 @@ class tuner_for_bob(trainer):
         print(f"Created {created_instances} to be trained using fill_up().")
 
     def get_random_hyperparameters(self):
+        """Returns a random set of hyperparameters from the hyperparameter dictionary of possible values."""
         def random_dict(input_dict):
             return {key: rand.choice(value) for key, value in input_dict.items()}
         
@@ -65,6 +67,8 @@ class tuner_for_bob(trainer):
         return param
     
     def tune(self, action_steps=3000, killers=3, killer_ratio=0.5, testing_steps=1000):
+        """Returns a dictionary with the parameters and their respective rewards after tuning."""
+
         assert action_steps%killers==0
 
         report = {}
@@ -80,6 +84,7 @@ class tuner_for_bob(trainer):
             self.prune(killer_ratio, testing_steps)
             for session in self.sessions:
                 report[str(session.params)].append(session.env.total_reward)
+                #session.env.total_reward = 0
                 session.env.reset()
             print("Finished this round of pruning!")
 
@@ -87,6 +92,8 @@ class tuner_for_bob(trainer):
         
             
     def prune(self, killer_ratio, steps):#e0 pruning
+        """Prunes the models based on their performance. The worst performing models are removed."""
+        
         old_number = len(self.sessions)
         print(f"Pruning {old_number} models to {int(old_number*killer_ratio)}-ish (parallel running)")
 
@@ -94,7 +101,9 @@ class tuner_for_bob(trainer):
             session.env.reset()
             session.agent.epsilon_save = float(session.agent.epsilon)
             session.agent.epsilon = 0.0
-        Parallel(n_jobs=-1)(delayed(reset_job)(session) for session in self.sessions)
+            session.env.total_reward = 0
+            return session
+        self.sessions = Parallel(n_jobs=-1)(delayed(reset_job)(session) for session in self.sessions)
         
         print("Running reward gathering.")
         self.train(steps)
@@ -115,9 +124,6 @@ class tuner_for_bob(trainer):
 
         def set_job(session):
             session.agent.epsilon = session.agent.epsilon_save
-        Parallel(n_jobs=-1)(delayed(set_job)(session) for session in self.sessions)
+            return session
+        self.sessions = Parallel(n_jobs=-1)(delayed(set_job)(session) for session in self.sessions)
         print("Finished reset. Resuming.")
-
-        
-
-

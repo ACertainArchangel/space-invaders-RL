@@ -233,6 +233,8 @@ class environment():
 
         self.reset()
 
+        self.total_reward = 0
+
     def reset(self):
         self.game_over = False
         self.playerX = 400
@@ -260,8 +262,6 @@ class environment():
 
         self.reward = 0
 
-        self.total_reward = 0
-
     class enemy():
         def __init__(self, parent):
             self.enemyX = rand.randint(0,750)
@@ -269,7 +269,6 @@ class environment():
             self.enemyXD=parent.Enemy_Speed*(rand.randint(0,1)*2-1)
             self.enemyYD=40
             self.parent = parent
-            #parent.enemies.append(self)
 
         def show(self):
             self.parent.screen.blit(self.parent.enemyImg, (self.enemyX, self.enemyY))
