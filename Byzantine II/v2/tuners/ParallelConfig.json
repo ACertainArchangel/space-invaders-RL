@@ -1,0 +1,5 @@
+{
+    "run_sessions_parallel":false,
+    "set_jobs_parallel":false,
+    "reset_jobs_parallel":false
+}

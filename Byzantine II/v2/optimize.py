@@ -1,22 +1,60 @@
-from tuners.tuner import tuner, get_remaining_ram_in_gb
+from tuners.tuner import tuner
+from helpers.load_json import load_json
 import json
+from sys import exit
+import datetime
 
-print(get_remaining_ram_in_gb())
+start = datetime.datetime.now()
 
-tuner = tuner(maximum_capacity=2)
+optimisation_settings = load_json("OptoConfig.json")
 
-tuner.fill_up(gigabytes_reserved=0.5) #Add better verbosity mode!!!
+tuner = tuner(maximum_capacity=optimisation_settings["maximum_capacity"])
 
-#tuner.add_render(**tuner.get_random_hyperparameters())
+if optimisation_settings["add_one_rendering"]:
 
-assert tuner.sessions!=[]
+    parallel_settings = load_json("tuners/ParallelConfig.json")
+    try:
+        assert not parallel_settings["run_sessions_parallel"]
+    except AssertionError:
+        print("You cannot run sessions in parallel and add a rendering session at the same time. Please check your settings.")
+        exit(1)
 
-data = tuner.tune(action_steps=999999, killers=3, killer_ratio=0.5, testing_steps=99999)
+    params = tuner.get_random_hyperparameters()
+    params["rendering"]=True
+    tuner.add(**params)
+    optimisation_settings["maximum_capacity"]-=1
+
+
+tuner.fill_up(gigabytes_reserved=optimisation_settings["gigabytes_reserved"], 
+              cores_reserved=optimisation_settings["cpu_cores_reserved"]) #Set this to -1 to diable the cores reserved check
+
+try:
+    assert tuner.sessions!=[]
+except AssertionError:
+    print("No sessions were added. Please check your settings.")
+    exit(1)
+
+
+data = tuner.tune(action_steps=optimisation_settings["action_steps_during_training"], 
+                  killers=optimisation_settings["killers"], 
+                  killer_ratio=optimisation_settings["killer_ratio"], 
+                  testing_steps=optimisation_settings["testing_steps"],
+                  train_during_pruning=optimisation_settings["train_during_pruning"])
+
+end = datetime.datetime.now()
+
+writing = {"Data":data,
+           "Start":str(start),
+           "End":str(end),
+           "Duration":str(end-start),
+           "Settings":optimisation_settings,
+           "Environment_Settings":load_json("tuners/EnvConfig.json")
+           }
 
 print(data)
 
-filename = "optimum.json"
+filename = optimisation_settings["output_file"]
 with open(filename, 'w') as json_file:
-    json.dump(data, json_file, indent=4)
+    json.dump(writing, json_file, indent=4)
 
 print(f"Data has been written to {filename}")

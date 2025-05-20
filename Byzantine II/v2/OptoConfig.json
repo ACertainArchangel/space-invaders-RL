@@ -1,0 +1,12 @@
+{
+    "maximum_capacity":2,
+    "gigabytes_reserved":0.5,
+    "cpu_cores_reserved":0,
+    "add_one_rendering":false, "_comment":"This cannot be set to true if you are parallelising the training in ParallelConfig.json",
+    "action_steps_during_training":198, 
+    "killers":2, 
+    "killer_ratio":0.4, 
+    "testing_steps":500,
+    "output_file":"optimum(output).json",
+    "train_during_pruning":false
+}

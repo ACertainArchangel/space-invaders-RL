@@ -1,0 +1,48 @@
+{
+    "Data": {
+        "{'alpha': 0.4, 'epsilon_init': 1.0, 'epsilon_decay': 0.99, 'epsilon_min': 0.01, 'gamma': 0.95, 'layer1_size': 1024, 'layer2_size': 512, 'layer3_size': 256, 'layer4_size': 128, 'batch_size': 16, 'learning_rate': 0.0001, 'dropout1': 0.2, 'dropout2': 0.1, 'dropout3': 0.1, 'reg1': 0.1, 'reg2': 0.0, 'reg3': 0.0, 'memory': 1000, 'input_shape': (1, 23), 'actions': 4, 'sample_size_for_TDERR': 200}": {
+            "rewards": [
+                -9.0,
+                -7.5
+            ],
+            "survival": 198.0
+        },
+        "{'alpha': 1, 'epsilon_init': 1.0, 'epsilon_decay': 0.999, 'epsilon_min': 0.01, 'gamma': 0.95, 'layer1_size': 1024, 'layer2_size': 512, 'layer3_size': 256, 'layer4_size': 128, 'batch_size': 16, 'learning_rate': 0.001, 'dropout1': 0.2, 'dropout2': 0.1, 'dropout3': 0.2, 'reg1': 0.01, 'reg2': 0.1, 'reg3': 0.0, 'memory': 10000, 'input_shape': (1, 23), 'actions': 4, 'sample_size_for_TDERR': 200}": {
+            "rewards": [
+                -9.0,
+                0
+            ],
+            "survival": 198.0
+        }
+    },
+    "Start": "2025-05-19 21:50:20.182868",
+    "End": "2025-05-19 21:57:12.782017",
+    "Duration": "0:06:52.599149",
+    "Settings": {
+        "maximum_capacity": 2,
+        "gigabytes_reserved": 0.5,
+        "cpu_cores_reserved": 0,
+        "add_one_rendering": false,
+        "_comment": "This cannot be set to true if you are parallelising the training in ParallelConfig.json",
+        "action_steps_during_training": 198,
+        "killers": 2,
+        "killer_ratio": 0.4,
+        "testing_steps": 500,
+        "output_file": "optimum(output).json",
+        "train_during_pruning": false
+    },
+    "Environment_Settings": {
+        "ammo_inc": 1.5,
+        "Player_Speed": 1,
+        "Enemy_Speed": 1,
+        "starting_ammo": 10,
+        "num_enem": 6,
+        "ammo_penalty": 1,
+        "hit_reward": 1.5,
+        "death_penalty": 100,
+        "closeness_penalty": 0.5,
+        "closeness_threshold": 0.5,
+        "SCREEN_HEIGHT": 800,
+        "SCREEN_WIDTH": 850
+    }
+}
