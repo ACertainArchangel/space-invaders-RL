@@ -17,13 +17,9 @@ sys.stdout = original
 class relu3_Qagent_linearOut_dOut_l2():
     """An agent that uses a 4 layer neural network with ReLU activations, dropout, and L2 regularization."""
 
-    class_hyperparameter_strings = '''alpha, epsilon_init, epsilon_decay, epsilon_min, gamma, layer1_size, 
-                 layer2_size, layer3_size, layer4_size, batch_size, learning_rate,
-                 dropout1, dropout2, dropout3, reg1, reg2, reg3, memory, input_shape, actions'''.split(", ")
-
     def __init__(self, alpha, epsilon_init, epsilon_decay, epsilon_min, gamma, layer1_size, 
                  layer2_size, layer3_size, layer4_size, batch_size, learning_rate,
-                 dropout1, dropout2, dropout3, reg1, reg2, reg3, memory, input_shape, actions, sample_size_for_TDERR, time_step_threshold=None): #20 Hyperparameters!
+                 dropout1, dropout2, dropout3, reg1, reg2, reg3, memory, input_shape, actions, sample_size_for_TDERR): 
         self.alpha = alpha
         self.epsilon = epsilon_init 
         self.epsilon_decay = epsilon_decay 

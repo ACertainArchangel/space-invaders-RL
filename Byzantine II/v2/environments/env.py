@@ -16,10 +16,6 @@ import numpy as np
 
 sys.stdout = original
 
-def is_collision(enemyX, enemyY, bulletX, bulletY, coldist):
-    distance = np.linalg.norm(np.array([enemyX, enemyY]) - np.array([bulletX, bulletY]))
-    return distance < coldist
-
 class environment():
 
     pygame_initialized = False
@@ -28,6 +24,36 @@ class environment():
     def _initialize_pygame(cls):
         pygame.init()
         cls.pygame_initialized=True
+
+    @staticmethod
+    def _is_collision(enemyX, enemyY, bulletX, bulletY, colision_threshold):
+        distance = np.linalg.norm(np.array([enemyX, enemyY]) - np.array([bulletX, bulletY]))
+        return distance < colision_threshold
+    
+    def __init__(self, ammo_inc, Player_Speed, Enemy_Speed, starting_ammo, num_enem, ammo_penalty,
+    hit_reward, death_penalty, closeness_penalty, closeness_threshold, SCREEN_HEIGHT=800, SCREEN_WIDTH=850):
+        
+        self.rendering = False
+        
+        self.ammo_inc = ammo_inc
+        self.Player_Speed = Player_Speed
+        self.Enemy_Speed = Enemy_Speed
+        self.ammo_value = starting_ammo
+        self.starting_ammo = starting_ammo
+        self.num_enem = num_enem
+        self.ammo_penalty = ammo_penalty#
+        self.hit_reward = hit_reward#
+        self.death_penalty = death_penalty#
+        self.closeness_penalty = closeness_penalty#
+        self.closeness_threshold = closeness_threshold#
+        self.SCREEN_HEIGHT=SCREEN_HEIGHT
+        self.SCREEN_WIDTH=SCREEN_WIDTH
+
+        self._initialize_pygame()
+
+        self.reset()
+
+        self.total_reward = 0
 
     def initialize_rendering(self):
         self.rendering = True
@@ -59,34 +85,6 @@ class environment():
 
         self.show_score=show_score
         self.show_ammo=show_ammo
-
-
-    def __init__(self, ammo_inc, Player_Speed, Enemy_Speed, starting_ammo, num_enem, ammo_penalty,
-    hit_reward, death_penalty, closeness_penalty, closeness_threshold, SCREEN_HEIGHT=800, SCREEN_WIDTH=850):
-        
-        print("If this is printed more than two times than you have a serious problem!!!")
-        
-        self.rendering = False
-        
-        self.ammo_inc = ammo_inc
-        self.Player_Speed = Player_Speed
-        self.Enemy_Speed = Enemy_Speed
-        self.ammo_value = starting_ammo
-        self.starting_ammo = starting_ammo
-        self.num_enem = num_enem
-        self.ammo_penalty = ammo_penalty#
-        self.hit_reward = hit_reward#
-        self.death_penalty = death_penalty#
-        self.closeness_penalty = closeness_penalty#
-        self.closeness_threshold = closeness_threshold#
-        self.SCREEN_HEIGHT=SCREEN_HEIGHT
-        self.SCREEN_WIDTH=SCREEN_WIDTH
-
-        self._initialize_pygame()
-
-        self.reset()
-
-        self.total_reward = 0
 
     def reset(self):
         """Resets the environment to it's initial state but does not reset total reward."""
@@ -139,9 +137,9 @@ class environment():
                 self.enemyY=self.enemyYD+self.enemyY
             self.enemyX = self.enemyXD + self.enemyX
         
-            collision = is_collision(self.enemyX, self.enemyY, self.parent.bulletX, self.parent.bulletY, 27) and self.parent.bullet_state == "fire"
+            collision = self.parent._is_collision(self.enemyX, self.enemyY, self.parent.bulletX, self.parent.bulletY, 27) and self.parent.bullet_state == "fire"
             if not self.parent.game_over:
-                self.parent.game_over = is_collision(self.enemyX,self.enemyY,self.parent.playerX,self.parent.playerY, 33)
+                self.parent.game_over = self.parent._is_collision(self.enemyX, self.enemyY, self.parent.playerX, self.parent.playerY, 33)
 
 
             if collision:
@@ -235,29 +233,23 @@ class environment():
 
     def render(self):
         self.screen.fill((0,0,0))
-        #BG
+
         self.screen.blit(self.Background, (0,0))
-        #Enemies
+
         for e in self.enemies:
             e.show()
-        #Player
+
         self.player(self.playerX, self.playerY)
 
         if not self.game_over:
             self.show_score(self.textX, self.textY)
             self.show_ammo(8,40)
-            #if self.ammo_value <1.9:
-                #warning = self.font.render("Last Chance!!! Low amunition!!!", True, (255, 0, 0))
-                #self.screen.blit(warning, (200,200))
 
         pygame.display.flip()  
-#time step, rewards, input, auto reset
 
 if __name__=="__main__":
     env = environment(1.5, 1, 1, 10, 6, 1, 1.5, 100, 0.5, 0.5, 800, 850)
     env.initialize_rendering()
-
-    
 
     while True:
 
@@ -274,7 +266,7 @@ if __name__=="__main__":
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
-                exit()
+                sys.exit(0)
 
         react = env.step(action)
         if react[3]==True:

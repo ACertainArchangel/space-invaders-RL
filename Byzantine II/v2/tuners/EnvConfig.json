@@ -1,0 +1,14 @@
+{
+"ammo_inc":1.5,
+"Player_Speed":1, 
+"Enemy_Speed":1, 
+"starting_ammo":10, 
+"num_enem":6, 
+"ammo_penalty":1,
+"hit_reward":1.5, 
+"death_penalty":100, 
+"closeness_penalty":0.5, 
+"closeness_threshold":0.5, 
+"SCREEN_HEIGHT":800, 
+"SCREEN_WIDTH":850
+}
