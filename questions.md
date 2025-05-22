@@ -9,3 +9,5 @@
 4. Seeing as enough computational power for hyperparameter tuning is clearly out of my budget, do you think I am on the right track with my current method of testing T1 and B0B and adjusting their hyperparameters based on how I see them perform?
 
 5. **Do you have any general advice about the project?** I consider this the most important question as you will for sure know best what it is I need to hear.
+
+6. Do you think there are any important questions I have failed to ask you?
