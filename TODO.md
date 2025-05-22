@@ -7,7 +7,7 @@
 * Get rid of hard coded shapes in agent.py.
 
 ### B0B:
-* Retry with adjusted hyperparameters
+* Retry with adjusted hyperparameters (see v1 version info)
 
 ### Byzantine T1:
-* Retry with adjusted hyperparameters.
+* Retry with adjusted hyperparameters (see v1 version info)
