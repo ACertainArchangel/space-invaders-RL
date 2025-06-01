@@ -172,6 +172,8 @@ class environment():
             if self.bulletY < 0:
                 self.bulletY = 730
                 self.bullet_state = "ready"
+                if self.ammo_value < 1:
+                    self.reset()
 
     def phobia(self):
         """If each enemy has gone farther than the threshold as a fraction of the screen punish the agent"""

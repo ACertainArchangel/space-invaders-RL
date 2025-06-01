@@ -1,20 +1,28 @@
-#Fix bullet render
+hyperdict = {
+            "gamma": 0.996,           # Discount factors for future rewards
+            "layer1_size": 1024,         # Sizes of the first hidden layer
+            "layer2_size": 512,         # Sizes of the second hidden layer
+            "layer3_size": 256,          # Sizes of the third hidden layer
+            "layer4_size": 128,           # Sizes of the fourth hidden layer
+            "batch_size": 64,      # Batch sizes to try
+            "learning_rate": 0.001, # Learning rates for the optimizer
+            "dropout1": 0.3,          # Dropout rates for the first layer
+            "dropout2": 0.2,          # Dropout rates for the second layer
+            "dropout3": 0.1,         # Dropout rates for the third layer
+            "reg1": 0.0001,              # L2 regularization strengths for layer 1
+            "reg2": 0.0001,                # L2 regularization strengths for layer 2
+            "reg3": 0.0001,                # L2 regularization strengths for layer 3
+            "memory": 100000,      # Sizes of the replay memory
+            "input_shape": (1, 23),         # Input shape for the model
+            "actions": 4,                  # Number of possible actions (e.g., in a reinforcement learning task)
+    }
 
-import sys
-class NullWriter:
-    def write(self, arg):
-        pass
-    def flush(self):
-        pass
-original = sys.stdout
-sys.stdout=NullWriter()
-
-#Import Modules
-import pygame
-import random as rand
+from collections import deque
 import numpy as np
-
-sys.stdout = original
+import random as rand
+from keras import layers, Sequential, regularizers, optimizers
+import keras
+import pygame
 
 def is_collision(enemyX, enemyY, bulletX, bulletY, coldist):
     distance = np.linalg.norm(np.array([enemyX, enemyY]) - np.array([bulletX, bulletY]))
@@ -60,36 +68,7 @@ class environment():
         self.show_score=show_score
         self.show_ammo=show_ammo
 
-
-    def __init__(self, ammo_inc, Player_Speed, Enemy_Speed, starting_ammo, num_enem, ammo_penalty,
-    hit_reward, death_penalty, closeness_penalty, closeness_threshold, SCREEN_HEIGHT=800, SCREEN_WIDTH=850):
-        
-        print("If this is printed more than two times than you have a serious problem!!!")
-        
-        self.rendering = False
-        
-        self.ammo_inc = ammo_inc
-        self.Player_Speed = Player_Speed
-        self.Enemy_Speed = Enemy_Speed
-        self.ammo_value = starting_ammo
-        self.starting_ammo = starting_ammo
-        self.num_enem = num_enem
-        self.ammo_penalty = ammo_penalty#
-        self.hit_reward = hit_reward#
-        self.death_penalty = death_penalty#
-        self.closeness_penalty = closeness_penalty#
-        self.closeness_threshold = closeness_threshold#
-        self.SCREEN_HEIGHT=SCREEN_HEIGHT
-        self.SCREEN_WIDTH=SCREEN_WIDTH
-
-        self._initialize_pygame()
-
-        self.reset()
-
-        self.total_reward = 0
-
     def reset(self):
-        """Resets the environment to it's initial state but does not reset total reward."""
         self.game_over = False
         self.playerX = 400
         self.playerY = 730
@@ -114,17 +93,13 @@ class environment():
 
         self.enemies=[self.enemy(self) for i in range(self.num_enem)]
 
-        self.reward = 0
-
     class enemy():
-        """An enemy object that moves in a random direction and can be hit by the bullet."""
         def __init__(self, parent):
             self.enemyX = rand.randint(0,750)
-            self.enemyY=rand.randint(50, 150)
+            self.enemyY=rand.randint(120, 200)
             self.enemyXD=parent.Enemy_Speed*(rand.randint(0,1)*2-1)
             self.enemyYD=40
             self.parent = parent
-            #parent.enemies.append(self)
 
         def show(self):
             self.parent.screen.blit(self.parent.enemyImg, (self.enemyX, self.enemyY))
@@ -145,14 +120,12 @@ class environment():
 
 
             if collision:
-                self.parent.reward+=self.parent.hit_reward
-                self.parent.total_reward+=self.parent.hit_reward
                 self.parent.bullet_state="ready"
                 self.parent.bulletY=730
                 self.parent.score_value += 1
                 self.parent.ammo_value+= self.parent.ammo_inc
                 self.enemyX = rand.randint(0,750)
-                self.enemyY = rand.randint(50, 150)
+                self.enemyY = rand.randint(100, 200)
                 if self.enemyX%2 == 0:
                     self.enemyXD = self.parent.Enemy_Speed #0.5
                 else:
@@ -177,13 +150,6 @@ class environment():
                 if self.ammo_value < 1:
                     self.reset()
 
-    def phobia(self):
-        """If each enemy has gone farther than the threshold as a fraction of the screen punish the agent"""
-        for e in self.enemies:
-            if e.enemyY>self.SCREEN_HEIGHT*self.closeness_threshold:
-                self.reward-=self.closeness_penalty*e.enemyY/self.SCREEN_HEIGHT
-                self.total_reward-=self.closeness_penalty*e.enemyY/self.SCREEN_HEIGHT
-
 
     def state(self):
         return np.array(
@@ -194,12 +160,7 @@ class environment():
 
     def step(self, action):
 
-        """Takes an action and returns (reward, state, newstate, done)"""
-
-        if self.game_over:
-            self.reset()
-
-        state = self.state()
+        """Takes an action and advanes the game by one step."""
 
         if action==0:
             self.playerXD=0
@@ -211,8 +172,6 @@ class environment():
             self.bulletX=self.playerX
             self.bullet_state="fire"
             self.ammo_value -= 1 
-            self.reward-=self.ammo_penalty
-            self.total_reward-=self.ammo_penalty
 
         if self.ammo_value <1 and self.bullet_state == "ready":
             self.game_over=True
@@ -222,18 +181,8 @@ class environment():
         self.move_player()
         self.move_bullet()
 
-        newstate = self.state()
-
         if self.game_over:
-            self.reward-=self.death_penalty
-            self.total_reward-=self.death_penalty
-
-        self.phobia()
-
-        reward = float(self.reward)
-        self.reward = 0
-
-        return (reward, state, newstate, self.game_over)
+            self.reset()
 
     def render(self):
         self.screen.fill((0,0,0))
@@ -248,37 +197,95 @@ class environment():
         if not self.game_over:
             self.show_score(self.textX, self.textY)
             self.show_ammo(8,40)
-            #if self.ammo_value <1.9:
-                #warning = self.font.render("Last Chance!!! Low amunition!!!", True, (255, 0, 0))
-                #self.screen.blit(warning, (200,200))
 
         pygame.display.flip()  
-#time step, rewards, input, auto reset
 
-if __name__=="__main__":
-    env = environment(1.5, 1, 1, 10, 6, 1, 1.5, 100, 0.5, 0.5, 800, 850)
-    env.initialize_rendering()
 
-    
+    def __init__(self, ammo_inc, Player_Speed, Enemy_Speed, starting_ammo, num_enem, SCREEN_HEIGHT=800, SCREEN_WIDTH=850):
+        
+        self.rendering = False
+        
+        self.ammo_inc = ammo_inc
+        self.Player_Speed = Player_Speed
+        self.Enemy_Speed = Enemy_Speed
+        self.ammo_value = starting_ammo
+        self.starting_ammo = starting_ammo
+        self.num_enem = num_enem
+        self.SCREEN_HEIGHT=SCREEN_HEIGHT
+        self.SCREEN_WIDTH=SCREEN_WIDTH
 
-    while True:
+        self._initialize_pygame()
 
-        keys = pygame.key.get_pressed()
-        if keys[pygame.K_LEFT]:
-            action = 1
-        elif keys[pygame.K_RIGHT]:
-            action = 2
-        elif keys[pygame.K_UP]:
-            action = 3
-        else:
-            action = 0
+        self.reset()
 
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                exit()
+class relu3_Qagent_linearOut_dOut_l2():
 
-        react = env.step(action)
-        if react[3]==True:
-            print(react)
-        env.render()
+    def __init__(self, gamma, layer1_size, 
+                 layer2_size, layer3_size, layer4_size, batch_size, learning_rate,
+                 dropout1, dropout2, dropout3, reg1, reg2, reg3, memory, input_shape, actions):
+        self.gamma = gamma 
+        self.batch_size = batch_size
+        self.input_shape=input_shape
+        self.model = self.create_model(layer1_size=layer1_size, layer2_size=layer2_size, layer3_size=layer3_size, layer4_size=layer4_size, 
+                                       dropout1=dropout1, dropout2=dropout2, dropout3=dropout3, reg1=reg1, reg2=reg2, reg3=reg3, learning_rate=learning_rate, input_shape=input_shape, output_size=actions)
+        
+        self.memory=deque(maxlen=memory)
+
+    @staticmethod
+    def create_model(layer1_size, layer2_size, layer3_size, layer4_size, 
+                     dropout1, dropout2, dropout3, reg1, reg2, reg3, learning_rate, input_shape: tuple, output_size: int):
+        model = Sequential()
+        model.add(layers.Input(shape=input_shape))
+        model.add(layers.Dense(layer1_size, activation="relu", kernel_regularizer=regularizers.l2(reg1)))
+        model.add(layers.Dropout(dropout1))
+        model.add(layers.Dense(layer2_size, activation="relu", kernel_regularizer=regularizers.l2(reg2)))
+        model.add(layers.Dropout(dropout2))
+        model.add(layers.Dense(layer3_size, activation="relu", kernel_regularizer=regularizers.l2(reg3)))
+        model.add(layers.Dropout(dropout3))
+        model.add(layers.Dense(layer4_size, activation="relu"))
+        model.add(layers.Dense(output_size, activation="linear"))
+        model.compile(optimizer=optimizers.Adam(learning_rate=learning_rate), 
+                  loss='mean_squared_error',  # or another loss function depending on your task
+                  metrics=['mae']),
+                  
+
+        return model
+
+    def load(self, path):
+        if not path.endswith(".weights.h5"):
+            path+=".weights.h5"
+
+        self.model.load_weights(path)
+
+    def act(self, state):
+        return np.argmax(self.model.predict(state, verbose=0)[0])
+
+env = environment(ammo_inc=1.5,
+                  Player_Speed=1,
+                  Enemy_Speed=1,
+                  starting_ammo=10,
+                  num_enem=6)
+
+env.reset()
+env.initialize_rendering()
+
+b0b = relu3_Qagent_linearOut_dOut_l2(**hyperdict)
+
+b0b.load("agent.weights.h5")
+
+while True:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            pygame.quit()
+
+        if event.type == pygame.KEYDOWN:
+            if event.key==pygame.K_SPACE:
+                s = env.state()
+                print(s)
+                print(b0b.model.predict(s))
+            if event.key==pygame.K_UP:
+                env.bullet_state = "fire"
+
+    env.step(b0b.act(env.state()))
+
+    env.render()

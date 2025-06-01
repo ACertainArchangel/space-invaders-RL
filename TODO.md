@@ -7,7 +7,12 @@
 * Get rid of hard coded shapes in agent.py.
 
 ### B0B:
-* Retry with adjusted hyperparameters (see v1 version info)
+* _Session running - No Tasks_
 
 ### Byzantine T1:
 * Retry with adjusted hyperparameters (see v1 version info)
+
+### General
+* Check out sum trees
+* Check out reward scaling
+* Use numpy more for optimisation?
