@@ -268,9 +268,9 @@ env = environment(ammo_inc=1.5,
 env.reset()
 env.initialize_rendering()
 
-b0b = relu3_Qagent_linearOut_dOut_l2(**hyperdict)
+T1 = relu3_Qagent_linearOut_dOut_l2(**hyperdict)
 
-b0b.load("agent.weights.h5")
+T1.load("agent.weights.h5")
 
 while True:
     for event in pygame.event.get():
@@ -281,10 +281,10 @@ while True:
             if event.key==pygame.K_SPACE:
                 s = env.state()
                 print(s)
-                print(b0b.model.predict(s))
+                print(T1.model.predict(s))
             if event.key==pygame.K_UP:
                 env.bullet_state = "fire"
 
-    env.step(b0b.act(env.state()))
+    env.step(T1.act(env.state()))
 
     env.render()

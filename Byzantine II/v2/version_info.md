@@ -3,7 +3,6 @@
 * Added different configurations for parallelization like `run_sessions_parallel`, `set_jobs_parallel`, `reset_jobs_parallel` so I can test which is most efficient.
 * Cleaned up the code
 * Added config files
-* Fixed hard coded shapes in agent.py **(TO DO)**
 * Merged trainer and tuner
 * Changed confusing file names
 * Changed `optimum.json` structure to accommodate for stopping times.

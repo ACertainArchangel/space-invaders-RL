@@ -14,14 +14,15 @@ hyperdict = {
             "batch_size": 64,      # Batch sizes to try
             "learning_rate": 0.001, # Learning rates for the optimizer
             "dropout1": 0.3,          # Dropout rates for the first layer
-            "dropout2": 0.2,          # Dropout rates for the second layer
-            "dropout3": 0.1,         # Dropout rates for the third layer
-            "reg1": 0.0001,              # L2 regularization strengths for layer 1
-            "reg2": 0.0001,                # L2 regularization strengths for layer 2
-            "reg3": 0.0001,                # L2 regularization strengths for layer 3
+            "dropout2": 0.3,          # Dropout rates for the second layer
+            "dropout3": 0.3,         # Dropout rates for the third layer
+            "reg1": 0.002,              # L2 regularization strengths for layer 1
+            "reg2": 0.002,                # L2 regularization strengths for layer 2
+            "reg3": 0.002,                # L2 regularization strengths for layer 3
             "memory": 100000,      # Sizes of the replay memory
             "input_shape": (1, 23),         # Input shape for the model
             "actions": 4,                  # Number of possible actions (e.g., in a reinforcement learning task)
+            "sample_size_for_TDERR":200,
     }
 
 import sys
@@ -42,16 +43,17 @@ import numpy as np
 sys.stdout = original
 
 class relu3_Qagent_linearOut_dOut_l2():
-    
+
     def __init__(self, alpha, epsilon_init, epsilon_decay, epsilon_min, gamma, layer1_size, 
                  layer2_size, layer3_size, layer4_size, batch_size, learning_rate,
-                 dropout1, dropout2, dropout3, reg1, reg2, reg3, memory, input_shape, actions, seed=rand.randint(0,10000)): #20 Hyperparameters!
+                 dropout1, dropout2, dropout3, reg1, reg2, reg3, memory, input_shape, actions, sample_size_for_TDERR, seed=rand.randint(0,10000)): #20 Hyperparameters!
         self.alpha = alpha
         self.epsilon = epsilon_init 
         self.epsilon_decay = epsilon_decay 
         self.epsilon_min = epsilon_min 
         self.gamma = gamma 
         self.batch_size = batch_size
+        self.sample_size_for_TDERR = sample_size_for_TDERR
         self.input_shape=input_shape
         self.model = self.create_model(layer1_size=layer1_size, layer2_size=layer2_size, layer3_size=layer3_size, layer4_size=layer4_size, 
                                        dropout1=dropout1, dropout2=dropout2, dropout3=dropout3, reg1=reg1, reg2=reg2, reg3=reg3, learning_rate=learning_rate, input_shape=input_shape, output_size=actions, seed=seed)
@@ -72,7 +74,7 @@ class relu3_Qagent_linearOut_dOut_l2():
         model.add(layers.Dense(layer4_size, activation="relu"))
         model.add(layers.Dense(output_size, activation="linear"))
         model.compile(optimizer=optimizers.Adam(learning_rate=learning_rate), 
-                  loss='mean_squared_error',
+                  loss='mean_squared_error',  # or another loss function depending on your task
                   metrics=['mae'])
         return model
 
@@ -97,29 +99,88 @@ class relu3_Qagent_linearOut_dOut_l2():
         else:
             return np.argmax(self.model.predict(state, verbose=0)[0])
     
-    def replay(self):
-
-        if len(self.memory) < self.batch_size:
+    def replay(self): #Adding beta to adjust for bias (self.model.optimiser.learning_rate = something with beta or whatever) might be a good idea
+        if len(self.memory)>=self.sample_size_for_TDERR:
+            TDERRSAMPLE = int(self.sample_size_for_TDERR)
+        elif self.batch_size<=len(self.memory)<self.sample_size_for_TDERR:
+            TDERRSAMPLE = len(self.memory)
+        elif len(self.memory)<self.batch_size:
             print("Not enough memories to replay. Skipping.")
             return -1
+        elif self.sample_size_for_TDERR<=self.batch_size:
+            raise ValueError("YOU SET THE SAMPLE SIZE TOO LOW, DUMMY!!!")
+        else:
+            raise ValueError("COME DEBUG THIS LINE OF CODE, DUMMY!!!")
 
-        selected_samples = rand.sample(self.memory, self.batch_size)
 
-        states = np.array([experience[0].reshape(1, 23) for experience in selected_samples]).reshape(self.batch_size, 1, 23)
+        samples = rand.sample(self.memory, TDERRSAMPLE)
+
+        guesses = [self.model.predict(experience[0].reshape(1, 1, 23), verbose=0) for experience in samples]
+
+        newguesses = [self.model.predict(experience[3].reshape(1, 1, 23), verbose=0) for experience in samples]
+
+        priorities = [abs(guess[0][0][experience[1]]-(experience[2] + np.max(newguess)*self.gamma )) for experience, guess, newguess in zip(samples, guesses, newguesses)]
+
+        """Essentially:
+        priorities = []
+        for experience in self.memory:
+            state = experience[0]
+            action = experience[1]
+            reward = experience[2]
+            nextstate = experience[3]
+            #done = experience[4]
+
+            reward_from_action_guess = self.model.predict(state)[action]
+
+            actual_reward = reward + np.max(self.model.predict(nextstate))*self.gamma #bootstrapping guess
+
+            td_err = abs(reward_from_action_guess - actual_reward)
+
+            priorities.append(td_err)"""
+        
+        probabilities = np.array(priorities)**self.alpha
+        probabilities /= probabilities.sum()
+
+        indicies = np.random.choice(len(samples), size=self.batch_size, p=probabilities)
+
+        selected_samples=[samples[i] for i in indicies]
+
+        selected_newguesses = [newguesses[i] for i in indicies]
+
+        states = np.array([experience[0].reshape(1, 23) for experience in selected_samples]).reshape(self.batch_size,1,23)
 
         actions = [experience[1] for experience in selected_samples]
 
-        # Calculate target values without using guesses
-        target_values = [(experience[2]) for experience in selected_samples]  # Simplified target values
+        target_values = [(experience[2] + np.max(newguess)) if not experience[4] else experience[2] for experience, newguess in zip(selected_samples, selected_newguesses)]
+
+        """Essentially:
+        target_values = []
+        for experience in selected:
+            if not experience[4]:
+                value = experience[2] + np.max(self.model.predict(experience[3]))
+            else:
+                value = experience[2]
+            target_values.append(value)
+        """
 
         predictions = self.model.predict(states, verbose=0)
 
         try:
-            targets = np.array([[reward if i == action else pred[i] for i, pred in enumerate(prediction)] for prediction, action, reward in zip(predictions, actions, target_values)])
+            targets = np.array([[reward if i==action else pred[i] for i, pred in enumerate(prediction)] for prediction, action, reward in zip(predictions, actions, target_values)])
         except:
-            for thing in [[reward if i == action else pred[i] for i, pred in enumerate(prediction)] for prediction, action, reward in zip(predictions, actions, target_values)]:
+            for thing in [[reward if i==action else pred[i] for i, pred in enumerate(prediction)] for prediction, action, reward in zip(predictions, actions, target_values)]:
                 print(thing)
             raise Exception("Oh, no... This target array is just not it... COME DEBUG!!!")
+        """
+        Generates a numpy array of target values by replacing specific predictions with corresponding rewards.
+        Essentially:
+        targets = []
+        for prediction, action, reward in zip(predictions, actions, target_values):
+            target = []
+            for i, pred in enumerate(prediction):
+                target.append(reward if i == action else pred)
+            targets.append(target)
+        targets = np.array(targets)"""
 
         try:
             print("Fitting model")
@@ -127,9 +188,12 @@ class relu3_Qagent_linearOut_dOut_l2():
         except:
             for state, target in zip(states, targets):
                 print(state, target)
-            raise Exception("There was an error fitting the model to the targets (printed above).")
+            raise Exception("There was an erros fitting the model to the targets (printed above).")
+        
+        self.epsilon = max(self.epsilon*self.epsilon_decay, self.epsilon_min)
 
-        self.epsilon = max(self.epsilon * self.epsilon_decay, self.epsilon_min)
+
+#Fix bullet render
 
 def is_collision(enemyX, enemyY, bulletX, bulletY, coldist):
     distance = np.linalg.norm(np.array([enemyX, enemyY]) - np.array([bulletX, bulletY]))
@@ -199,8 +263,6 @@ class environment():
 
         self.reset()
 
-        self.total_reward = 0
-
     def reset(self):
         self.game_over = False
         self.playerX = 400
@@ -228,6 +290,8 @@ class environment():
 
         self.reward = 0
 
+        self.total_reward = 0
+
     class enemy():
         def __init__(self, parent):
             self.enemyX = rand.randint(0,750)
@@ -235,17 +299,18 @@ class environment():
             self.enemyXD=parent.Enemy_Speed*(rand.randint(0,1)*2-1)
             self.enemyYD=40
             self.parent = parent
+            #parent.enemies.append(self)
 
         def show(self):
             self.parent.screen.blit(self.parent.enemyImg, (self.enemyX, self.enemyY))
 
         def move(self):
             if self.enemyX<0:
-                self.enemyXD= self.parent.Enemy_Speed
+                self.enemyXD= self.parent.Enemy_Speed #0.5
                 self.enemyY=self.enemyYD+self.enemyY
         
             elif self.enemyX>786:
-                self.enemyXD=-self.parent.Enemy_Speed
+                self.enemyXD=-self.parent.Enemy_Speed#-0.5
                 self.enemyY=self.enemyYD+self.enemyY
             self.enemyX = self.enemyXD + self.enemyX
         
@@ -284,8 +349,6 @@ class environment():
             if self.bulletY < 0:
                 self.bulletY = 730
                 self.bullet_state = "ready"
-                if self.ammo_value < 1:
-                    self.reset()
 
     def phobia(self):
         """If each enemy has gone farther than the threshold as a fraction of the screen punish the agent"""
@@ -363,18 +426,7 @@ class environment():
 
         pygame.display.flip()  
 
-##########################################################################################################################
-
-env = environment(ammo_inc=1.5,
-                  Player_Speed=1,
-                  Enemy_Speed=1,
-                  starting_ammo=10,
-                  num_enem=6,
-                  ammo_penalty=1,
-                  hit_reward=1.5,
-                  death_penalty=100,
-                  closeness_penalty=0.5,
-                  closeness_threshold=0.5)
+env = environment(1.5,1,1,10,6,1,1.5,100,0.5,0.5)
 
 agent = relu3_Qagent_linearOut_dOut_l2(**hyperdict)
 
@@ -417,3 +469,5 @@ for i in range(number_of_train_y_bits):
         sys.stdout.write(ERASE_LINE) 
         print(f"Training step: {i}/{number_of_train_y_bits}\nAction step: {j}/{time_step_threshold}\n{(i/number_of_train_y_bits+(j/time_step_threshold)/number_of_train_y_bits)*100}%")
     agent.replay()
+
+

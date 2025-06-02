@@ -23,5 +23,5 @@ Takeaways:
 * Tone down the L2 regularisation
 * shape rewards a bit more
 * Maybe try leaky RELU
-* Fix the trainer, which I am realising now doesn't reset ammo or make it game over on 0 ammo. 
+* Fix the trainer, which I am realising now doesn't reset ammo or make it game over on 0 ammo. (fixed)
 
