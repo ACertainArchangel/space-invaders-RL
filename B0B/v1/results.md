@@ -12,3 +12,4 @@ Trial details:
 * 3M action steps
 * ~23.3 Hours (4 PM Apr 18 - 3:20 Apr 19 2025)
 * 1 New way not to do this
+* 2017 Macbook air
