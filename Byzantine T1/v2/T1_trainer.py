@@ -1,3 +1,5 @@
+LOADING = False
+
 number_of_train_y_bits = 3000
 time_step_threshold = 1000
 
@@ -14,11 +16,11 @@ hyperdict = {
             "batch_size": 64,      # Batch sizes to try
             "learning_rate": 0.001, # Learning rates for the optimizer
             "dropout1": 0.3,          # Dropout rates for the first layer
-            "dropout2": 0.3,          # Dropout rates for the second layer
-            "dropout3": 0.3,         # Dropout rates for the third layer
-            "reg1": 0.002,              # L2 regularization strengths for layer 1
-            "reg2": 0.002,                # L2 regularization strengths for layer 2
-            "reg3": 0.002,                # L2 regularization strengths for layer 3
+            "dropout2": 0.2,          # Dropout rates for the second layer
+            "dropout3": 0.1,         # Dropout rates for the third layer
+            "reg1": 0.0001,              # L2 regularization strengths for layer 1
+            "reg2": 0.0001,                # L2 regularization strengths for layer 2
+            "reg3": 0.0001,                # L2 regularization strengths for layer 3
             "memory": 100000,      # Sizes of the replay memory
             "input_shape": (1, 23),         # Input shape for the model
             "actions": 4,                  # Number of possible actions (e.g., in a reinforcement learning task)
@@ -430,10 +432,11 @@ env = environment(1.5,1,1,10,6,1,1.5,100,0.5,0.5)
 
 agent = relu3_Qagent_linearOut_dOut_l2(**hyperdict)
 
-try:
-    agent.load("agent.weights.h5")
-except:
-    print("Eeeeh, brutha. No weights.")
+if LOADING:
+    try:
+        agent.load("agent.weights.h5")
+    except:
+        print("Eeeeh, brutha. No weights.")
 
 import atexit
 
