@@ -27,3 +27,6 @@ combinations and may have minor tweaks to the code, which will be documented.
 Each version file is self contained.
 I know each version uses the same resources and sometimes the same modules --sometimes leading to redundancy-- but the resources are very 
 lightweight. Since I sometimes tweak modules between versions, the organizational payout of this redundancy tradeoff is well worth it to me.
+
+### qvals.md (informational only)
+As of June 28 some versions created before then will have qvals.txt created by hand to show sample q-values after a full training session. In the future, new versions will log sample q-values at many places in the training process. B0B and T1 v1 and v2 will have manually created qvals.txt files, II will not have any qvals.txt files as it is too heavy to run.

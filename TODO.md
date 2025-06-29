@@ -5,11 +5,8 @@
 * Change how pruning works so it ends in training rather than pruning.
 * Fix how model survival is documented and test further.
 
-### B0B v2:
-* _Session running - No Tasks for now_
-
 ### Byzantine T1 v2:
-* _Session running - No Tasks for now_
+* Run and document
 
 ### General:
 * Check out sum trees
@@ -20,6 +17,8 @@
 * Leaky ReLU
 * Fix bullet rendering
 * Fix hard coded shapes in agent.py like files
+* Seriously overhaul reward shaping
+* Prioritise replay based on reward magnitude maybe? Forget replayed memories once they are remembered n times? I think replay can be upgraded, and this may be worthy of it's own model -> T2.
 
 ### VERSIONS:
 * v1 **DONE**
@@ -27,8 +26,8 @@
     * T1 DONE
     * II DONE
 * v2
-    * B0B running
-    * T1 running
+    * B0B DONE
+    * T1 to be run
     * II in progress
 * v3
     * B0B yet to start

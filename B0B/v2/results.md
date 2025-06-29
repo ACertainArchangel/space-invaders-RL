@@ -26,6 +26,11 @@ Untrained:
 [[[  67.5563  -722.5067  -533.5925   128.44443]]]
 [[[ 189.97603 -419.55045 -405.916    145.66806]]]
 
+After this weight analysis I created qvals.txt for all versions.
+
+Interestingly enough, this newer version of B0B produces q-values EVEN CLOSER TO ZERO!
+That can't be from REDUCING L2 so it must be dropout? Random Chance?
+
 Yea, results not so good as you can see by the reward guesses. Stayed in place again. 
 
 What to try:

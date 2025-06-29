@@ -7,4 +7,4 @@
 * Changed confusing file names
 * Changed `optimum.json` structure to accommodate for stopping times.
     - which means `optimum.json` records early killed models too.
-* Made it so that tuning does not end on pruning but rather more training and adjusted logs accordingly **TO DO**
+* Made it so that tuning does not end on pruning but rather more training and adjusted logs accordingly
