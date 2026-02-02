@@ -27,6 +27,12 @@ class Agent:
 
         self.gamma = gamma
 
+    def load_model_weights(self, path):
+        self.model.load_weights(path)
+
+    def save_model_weights(self, path):
+        self.model.save_weights(path)
+
     def select_action(self, state):
         """Select an action based on the current state. For now, always returns 0 (no movement)."""
         # Add batch dimension if needed
