@@ -7,17 +7,19 @@ Training Configuration:
 - LOADING=True loads previous weights
 """
 
-TRAINING = True
+TRAINING = False
 RENDERING = True   # Disable for faster training (you have to on colab cus their rendering is a pain)
 EPISODES = 5000    # Number of episodes to train
 MAX_STEPS = 10000  # Max steps per episode
 
-LOADING = False    # Loed [sic]
-SAVING = True
+LOADING = True    # Loed [sic]
+SAVING = False
 SAVE_EVERY = 100   # Save weights every N episodes
 
 SCREEN_HEIGHT = 800
 SCREEN_WIDTH = 850
+
+WEIGHT_PATH = "model_no_fine_tune.weights.h5"
 
 from Environment import Environment
 from Agent import Agent
@@ -29,14 +31,14 @@ import sys
 
 # Environment with tuned reward parameters
 env = Environment(
-    ammo_inc=1.5,           # Ammo gained per hit
-    Player_Speed=2,         # Faster player movement
+    ammo_inc=2.5,           # Ammo gained per hit
+    Player_Speed=2,         
     Enemy_Speed=1,
     starting_ammo=10,
     num_enem=6,
-    ammo_penalty=0.1,       # Small penalty for shooting (was 1)
-    hit_reward=10.0,        # Big reward for hitting (was 1.5)
-    death_penalty=50.0,     # Big penalty for dying (was 100)
+    ammo_penalty=0.35,       # Small penalty for shooting (was 1)
+    hit_reward=1.0,        # Big reward for hitting (was 1.5)
+    death_penalty=0.0,     # Big penalty for dying (was 100)
     closeness_penalty=0.1,  # Reduced (was 0.5)
     closeness_threshold=0.5,
     SCREEN_HEIGHT=SCREEN_HEIGHT,
@@ -56,7 +58,7 @@ agent = Agent(
 
 if LOADING:
     try:
-        agent.load_model_weights("model.weights.h5")
+        agent.load_model_weights(WEIGHT_PATH)
         print("Loaded model weights successfully!")
     except Exception as e:
         print(f"Could not load weights: {e}")
@@ -118,9 +120,9 @@ for episode in tqdm(range(EPISODES), desc="Training"):
             agent.save_model_weights("model_best.weights.h5")
         
         if (episode + 1) % SAVE_EVERY == 0:
-            agent.save_model_weights("model.weights.h5")
+            agent.save_model_weights(WEIGHT_PATH)
             print(f"\nSaved checkpoint at episode {episode+1}")
 
 if SAVING:
-    agent.save_model_weights("model.weights.h5")
+    agent.save_model_weights(WEIGHT_PATH)
     print("\nTraining complete! Model saved.")
